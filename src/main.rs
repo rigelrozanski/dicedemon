@@ -8,21 +8,20 @@ use bit_vec::BitVec;
 use ring::digest::{self, digest};
 
 fn main() {
+    
+    // temp code 
     let oneword = "abandon";
     let mut wordvec = vec![];
     let numwords = 23;
-
-    for x in 0..numwords { 
+    for _ in 0..numwords { 
         wordvec.push(oneword);
     }
 
-    let partialwords = wordvec.join(" ");
     let lang = Language::English;
     let word_map = lang.get_wordmap(); 
-
     let mut to_validate: BitVec = BitVec::new();
-
-    for word in partialwords.split(" ").into_iter() {
+    
+    for word in wordvec {
         let n = match word_map.get(word) {
             Some(n) => n,
             None => panic!("uh oh")
@@ -33,7 +32,7 @@ fn main() {
         }
     }
 
-    println!("{}", wordvec[0]);
+    //println!("{}", wordvec[0]);
 }
 
 fn sha256(input: &[u8]) -> Vec<u8> {
