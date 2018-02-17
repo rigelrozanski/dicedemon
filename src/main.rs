@@ -11,6 +11,10 @@ fn main() {
     let oneword = "abandon";
     let mut wordvec = vec![];
     let numwords = 23;
+    let target_mnemonic = MnemonicType::Type24Words;
+    assert_eq!(numwords,target_mnemonic.word_count()-1);
+
+    let added_entropy= target_mnemonic.entropy_bits() - numwords *11;     
 
     for x in 0..numwords { 
         wordvec.push(oneword);
@@ -31,6 +35,12 @@ fn main() {
             let bit = bit_from_u16_as_u11(*n, i);
             to_validate.push(bit);
         }
+    }
+
+
+    for x in 0..added_entropy{
+        let bit = false; //used fixed bits
+        to_validate.push(bit);
     }
 
     println!("{}", wordvec[0]);
