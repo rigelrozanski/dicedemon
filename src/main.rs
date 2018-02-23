@@ -3,27 +3,69 @@ extern crate bip39;
 extern crate bit_vec;
 extern crate bitreader;
 
+#[macro_use]
+extern crate structopt;
+
 use bip39::Language;
 use bip39::MnemonicType;
 use bit_vec::BitVec;
 use ring::digest::{self, digest};
 use bitreader::BitReader;
+use std::io::{stdin,stdout,Write};
+use structopt::StructOpt;
+
+/// Calculate checksum BIP39 words
+#[derive(StructOpt, Debug)]
+#[structopt(name = "dice-demon")]
+struct Opt {
+    /// Activate debug mode
+    #[structopt(short = "d", long = "debug")]
+    debug: bool,
+    
+    /// Number of words to calculate for, must be either 12, 15, 18, 21, or 24
+    #[structopt(short = "w", long = "numwords", default_value = "24")]
+    numwords: usize,
+}
 
 fn main() {
     
-    // temp code 
-    let oneword = "abandon";
-    let mut wordvec = vec![];
-    let numwords = 23;
-    let target_mnemonic = MnemonicType::Type24Words;
-    assert_eq!(numwords,target_mnemonic.word_count()-1);
-
-    let added_entropy= target_mnemonic.entropy_bits() - numwords *11;     
-
-    for x in 0..numwords { 
-        wordvec.push(oneword);
+    let opt = Opt::from_args();
+    println!("{:?}", opt);
+   
+    // set num words
+    let numwords = opt.numwords;
+    let target_mnemonic;
+    match numwords {
+        12 => target_mnemonic = MnemonicType::Type12Words, 
+        15 => target_mnemonic = MnemonicType::Type15Words, 
+        18 => target_mnemonic = MnemonicType::Type18Words, 
+        21 => target_mnemonic = MnemonicType::Type21Words, 
+        24 => target_mnemonic = MnemonicType::Type24Words, 
+        _ => {
+            println!("Invalid number of words!");
+            return;
+        }
     }
 
+    let mut buffer = String::new();
+    let mut wordvec = vec![];
+   
+    for i in 0..(numwords-1) {
+        if opt.debug {
+            let debug_word = "abandon";
+            wordvec.push(debug_word);
+            continue;
+        }
+
+        print!("Enter word {}: ", (i+1));
+
+        let _=stdout().flush();
+        stdin().read_line(&mut buffer).expect("Did not enter a correct string");
+        wordvec.push(&buffer);
+    }
+
+    assert_eq!(numwords-1,target_mnemonic.word_count()-1);
+    let added_entropy= target_mnemonic.entropy_bits() - (numwords-1) *11;     
     let lang = Language::English;
     let word_map = lang.get_wordmap(); 
     let word_list = lang.get_wordlist();
@@ -41,7 +83,7 @@ fn main() {
     }
 
 
-    for x in 0..added_entropy{
+    for _ in 0..added_entropy{
         let bit = false; //used fixed bits
         to_validate.push(bit);
     }
@@ -57,16 +99,15 @@ fn main() {
     let mut reader = BitReader::new(word_bytes);
 
     let mut words: Vec<&str> = Vec::new();
-    for _ in 0..(numwords+1) {
+    for _ in 0..numwords {
         let n = reader.read_u16(11);
         words.push(word_list[n.unwrap() as usize].as_ref());
     }
 
-    let string = words.join(" ");
-
-    println!("{}",string)
-
-
+    // print the output
+    for x in 0..numwords {
+        println!("{}.\t{}",x, words[x])
+    }
 }
 
 fn sha256(input: &[u8]) -> Vec<u8> {
