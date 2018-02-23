@@ -48,20 +48,21 @@ fn main() {
     }
 
     let mut buffer = String::new();
-    let mut wordvec = vec![];
+    let mut wordvec: Vec<String> = vec![];
    
     for i in 0..(numwords-1) {
         if opt.debug {
             let debug_word = "abandon";
-            wordvec.push(debug_word);
+            wordvec.push(debug_word.to_owned());
             continue;
         }
 
         print!("Enter word {}: ", (i+1));
 
         let _=stdout().flush();
-        stdin().read_line(&mut buffer).expect("Did not enter a correct string");
-        wordvec.push(&buffer);
+        stdin().read_line(&mut buffer).expect("Did not enter a correct string");    
+        wordvec.push(buffer.clone());
+        buffer.clear();
     }
 
     assert_eq!(numwords-1,target_mnemonic.word_count()-1);
@@ -72,7 +73,7 @@ fn main() {
     let mut to_validate: BitVec = BitVec::new();
     
     for word in wordvec {
-        let n = match word_map.get(word) {
+        let n = match word_map.get(&word) {
             Some(n) => n,
             None => panic!("uh oh")
         };
